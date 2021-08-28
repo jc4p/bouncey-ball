@@ -27,7 +27,7 @@ var config = {
 
 var game = new Phaser.Game(config);
 var ball;
-var counter;
+// var counter;
 var collided = false;
 var lastUpdate = 0;
 
@@ -45,7 +45,7 @@ function preload() {
   ball.body.setCollideWorldBounds(true);
   ball.body.setBounce(0, BOUNCE);
 
-  counter = this.add.text(0, 0, 'Velocity Y: ' + ball.body.velocity.y)
+  // counter = this.add.text(0, 0, 'Velocity Y: ' + ball.body.velocity.y)
 }
 
 function create() {
@@ -81,7 +81,7 @@ function create() {
     }
 
     updateBall(ball.body.velocity.y);
-
+/*
     lastUpdate++;
 
     if (lastUpdate < 4) {
@@ -92,6 +92,7 @@ function create() {
     counter.setText('Velocity Y: ' + Math.floor(velocity))
 
     lastUpdate = 0;
+*/
   })
 }
 
