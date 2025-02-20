@@ -1,0 +1,21 @@
+{
+  "rewrites": [
+    { "source": "/0", "destination": "/metadata/0" },
+    { "source": "/1", "destination": "/metadata/1" }
+  ],
+  "headers": [
+    {
+      "source": "/metadata/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ]
+} 
