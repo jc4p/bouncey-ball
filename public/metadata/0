@@ -1,0 +1,20 @@
+{
+  "name": "Bouncey Ball #0",
+  "description": "A bouncing ball game NFT that you can actually play!",
+  "image": "https://bounce.kasra.codes/0.svg",
+  "animation_url": "https://bounce.kasra.codes",
+  "attributes": [
+    {
+      "trait_type": "Game Type",
+      "value": "Interactive"
+    },
+    {
+      "trait_type": "Genre",
+      "value": "Arcade"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Easy"
+    }
+  ]
+} 
