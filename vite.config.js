@@ -1,36 +1,49 @@
 import { defineConfig } from 'vite';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
-export default defineConfig({
-  server: {
-    // Handle metadata and SVG routes
-    onBeforeMiddleware({ middlewares }) {
-      middlewares.use((req, res, next) => {
-        // Check if the request is for metadata or SVG
-        if (req.url === '/0' || req.url === '/1' || req.url === '/0.svg' || req.url === '/1.svg') {
-          const filePath = path.join(process.cwd(), 'public', req.url);
+// Custom plugin to handle metadata routes
+function metadataPlugin() {
+  return {
+    name: 'metadata-plugin',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        // Handle both /0 and /metadata/0 paths
+        const isMetadata = req.url === '/0' || req.url === '/1' || 
+                          req.url === '/metadata/0' || req.url === '/metadata/1';
+        
+        if (isMetadata) {
           try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const contentType = req.url.endsWith('.svg') ? 'image/svg+xml' : 'application/json';
-            res.setHeader('Content-Type', contentType);
+            // Extract the ID (0 or 1) from either URL pattern
+            const id = req.url.split('/').pop();
+            // Always read from the metadata directory
+            const filePath = path.resolve(__dirname, 'public/metadata', id);
+            const content = await fs.readFile(filePath, 'utf-8');
+            
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(content),
+              'Access-Control-Allow-Origin': '*'
+            });
             res.end(content);
-          } catch (error) {
-            next(error);
+            return;
+          } catch (e) {
+            next(e);
           }
-        } else {
-          next();
         }
+        next();
       });
+    },
+    configurePreviewServer(server) {
+      // Same configuration for preview server
+      this.configureServer(server);
     }
-  },
+  };
+}
+
+export default defineConfig({
+  plugins: [metadataPlugin()],
   build: {
-    // Ensure metadata and SVG files are copied to dist
-    copyPublicDir: true,
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html')
-      }
-    }
+    copyPublicDir: true
   }
 }); 
