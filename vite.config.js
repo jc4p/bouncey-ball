@@ -25,14 +25,11 @@ export default defineConfig({
     }
   },
   build: {
-    // Copy metadata and SVG files to build output
+    // Ensure metadata and SVG files are copied to dist
+    copyPublicDir: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        metadata0: path.resolve(__dirname, 'public/metadata/0'),
-        metadata1: path.resolve(__dirname, 'public/metadata/1'),
-        svg0: path.resolve(__dirname, 'public/0.svg'),
-        svg1: path.resolve(__dirname, 'public/1.svg')
+        main: path.resolve(__dirname, 'index.html')
       }
     }
   }
