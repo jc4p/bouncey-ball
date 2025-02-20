@@ -15,7 +15,9 @@ var config = {
     },
   },
   scale: {
-    mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
+    mode: Phaser.Scale.RESIZE,
+    width: '100%',
+    height: '100%',
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   scene: {
@@ -27,18 +29,30 @@ var config = {
 
 var game = new Phaser.Game(config);
 var ball;
-// var counter;
 var collided = false;
 var lastUpdate = 0;
+var scoreText;
+var highScoreText;
+var score = 0;
+var highScore = 0;
+var scoreTimer;
+var gameStarted = false;
 
-var BALL_SIZE = 48;
+// Make ball size relative to screen height
+function getBallSize() {
+  return Math.max(game.scale.height * 0.09375, 32); // 48px at 512 height
+}
+
 var BOUNCE = 0.25;
-
 var MIN_STRETCH = 350.0;
 var MAX_STRETCH = 650.0;
 
 function preload() {
-  ball = this.add.ellipse(256, BALL_SIZE * 2, BALL_SIZE, BALL_SIZE, 0xEFEFEF);
+  const centerX = this.cameras.main.width / 2;
+  const BALL_SIZE = getBallSize();
+  const centerY = BALL_SIZE * 2;
+  
+  ball = this.add.ellipse(centerX, centerY, BALL_SIZE, BALL_SIZE, 0xEFEFEF);
   this.physics.add.existing(ball, false);
 
   ball.body.onWorldBounds = true;
@@ -51,12 +65,78 @@ function preload() {
 function create() {
   this.input.mouse.disableContextMenu();
 
+  // Calculate responsive text size and padding using game scale manager
+  const gameWidth = this.scale.gameSize.width;
+  const gameHeight = this.scale.gameSize.height;
+  const fontSize = Math.max(Math.floor(gameHeight * 0.04), 14);
+  const padding = Math.max(Math.floor(gameHeight * 0.03), 10);
+
+  const textConfig = {
+    fontSize: `${fontSize}px`,
+    fontFamily: 'monospace',
+    fill: '#ffffff'
+  };
+
+  // Add high score text in top left corner
+  highScoreText = this.add.text(padding, padding, 'BEST:0', textConfig)
+    .setDepth(1)
+    .setScrollFactor(0)
+    .setOrigin(0, 0);
+
+  // Add score text in top right corner
+  scoreText = this.add.text(gameWidth - padding, padding, '0', textConfig)
+    .setDepth(1)
+    .setScrollFactor(0)
+    .setOrigin(1, 0);
+
+  // Handle resize events - bind to scene context
+  this.handleResize = function(gameSize) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+    const fontSize = Math.max(Math.floor(height * 0.04), 14);
+    const padding = Math.max(Math.floor(height * 0.03), 10);
+
+    const newTextConfig = {
+      fontSize: `${fontSize}px`,
+      fontFamily: 'monospace'
+    };
+
+    // Update text styles and positions
+    highScoreText
+      .setPosition(padding, padding)
+      .setStyle(newTextConfig);
+
+    scoreText
+      .setPosition(width - padding, padding)
+      .setStyle(newTextConfig);
+
+    // Update ball position to stay centered
+    ball.setPosition(width / 2, ball.y);
+  };
+
+  // Bind resize event
+  this.scale.on('resize', this.handleResize, this);
+
+  // Force an initial resize to ensure correct positioning
+  this.handleResize(this.scale.gameSize);
+
   this.input.on('pointerdown', function (pointer) {
     if (ball.body.velocity.y > -100) {
+      if (!gameStarted) {
+        gameStarted = true;
+        // Start incrementing score every second
+        scoreTimer = this.time.addEvent({
+          delay: 1000,
+          callback: incrementScore,
+          callbackScope: this,
+          loop: true
+        });
+      }
+      
       ball.body.setVelocityY(-200);
-      if (ball.height > BALL_SIZE) {
+      if (ball.height > getBallSize()) {
         // snap back
-        ball.setSize(BALL_SIZE, BALL_SIZE);
+        ball.setSize(getBallSize(), getBallSize());
       }
       if (collided) {
         collided = false;
@@ -65,13 +145,10 @@ function create() {
   }, this);
 
   this.physics.world.on('worldbounds', function(ballBody, up, down) {
-    if (up) {
-      return;
+    // Reset game when ball hits either top or bottom
+    if (up || down) {
+      resetGame();
     }
-
-    ball.setSize(BALL_SIZE, BALL_SIZE)
-    ball.body.setBounce(0, BOUNCE)
-    collided = true
   })
 
   this.physics.world.on('worldstep', function(delta) {
@@ -100,13 +177,13 @@ function update() {
 }
 
 function updateBall(velocity) {
+  const BALL_SIZE = getBallSize();
   var ratio = (velocity - MIN_STRETCH) / (MAX_STRETCH - MIN_STRETCH)
   var sinRatio = Math.sin(ratio);
 
   if (ratio < 0) {
     return;
   }
-
 
   var newBounce = BOUNCE * (1.5 + sinRatio);
   ball.body.setBounce(0, newBounce);
@@ -117,4 +194,30 @@ function updateBall(velocity) {
 
   var newHeight = BALL_SIZE * (1.0 + sinRatio);
   ball.setSize(BALL_SIZE, newHeight);
+}
+
+function incrementScore() {
+  score += 1;
+  scoreText.setText(score.toString());
+}
+
+function resetGame() {
+  // Update high score if current score is higher
+  if (score > highScore) {
+    highScore = score;
+    highScoreText.setText('BEST:' + highScore);
+  }
+  
+  // Reset score and timer
+  if (scoreTimer) {
+    scoreTimer.destroy();
+  }
+  score = 0;
+  gameStarted = false;
+  scoreText.setText('0');
+  
+  const BALL_SIZE = getBallSize();
+  ball.setSize(BALL_SIZE, BALL_SIZE);
+  ball.body.setBounce(0, BOUNCE);
+  collided = true;
 }
