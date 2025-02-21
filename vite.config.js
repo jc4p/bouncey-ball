@@ -8,16 +8,24 @@ function metadataPlugin() {
     name: 'metadata-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        // Handle both /0 and /metadata/0 paths
+        // Handle metadata and audio paths
         const isMetadata = req.url === '/0' || req.url === '/1' || 
                           req.url === '/metadata/0' || req.url === '/metadata/1';
+        const isAudio = req.url === '/audio/0' || req.url === '/audio/1';
         
-        if (isMetadata) {
+        if (isMetadata || isAudio) {
           try {
-            // Extract the ID (0 or 1) from either URL pattern
-            const id = req.url.split('/').pop();
-            // Always read from the metadata directory
-            const filePath = path.resolve(__dirname, 'public/metadata', id);
+            let filePath;
+            if (isAudio) {
+              // For audio routes, use the audio directory
+              const id = req.url.split('/').pop();
+              filePath = path.resolve(__dirname, 'public/audio', id);
+            } else {
+              // For metadata routes, use the metadata directory
+              const id = req.url.split('/').pop();
+              filePath = path.resolve(__dirname, 'public/metadata', id);
+            }
+
             const content = await fs.readFile(filePath, 'utf-8');
             
             res.writeHead(200, {

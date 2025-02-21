@@ -1,0 +1,12 @@
+{
+  "name": "Bouncey Ball #0 Audio",
+  "description": "Audio track for Bouncey Ball #0",
+  "image": "https://images.kasra.codes/kasra.mp4",
+  "animation_url": "https://images.kasra.codes/kasra.mp4",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Video"
+    }
+  ]
+} 

@@ -3,6 +3,8 @@
   "description": "A bouncing ball game NFT that you can actually play!",
   "image": "https://bounce.kasra.codes/1.svg",
   "animation_url": "https://bounce.kasra.codes",
+  "external_url": "https://bounce.kasra.codes",
+  "background_color": "345654",
   "attributes": [
     {
       "trait_type": "Game Type",

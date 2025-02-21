@@ -5,7 +5,7 @@
   ],
   "headers": [
     {
-      "source": "/metadata/(.*)",
+      "source": "/(metadata|audio)/(.*)",
       "headers": [
         {
           "key": "Content-Type",
